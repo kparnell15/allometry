@@ -1,28 +1,87 @@
 ---
 title: "Notebook"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+## Allometry Project
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+> How does plant mass scale with height?
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+- No relationship
+- Linear
+- To the third power
+- To the second power
 
-```{r cars}
-summary(cars)
+## Load our data
+```{r}
+
+seeds <- read.csv("https://raw.githubusercontent.com/jmadin/himbr/master/data/seed_root_herbivores.csv", as.is=TRUE)
+
+
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
+## A function for standard error 
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+
+standard_error <- function(x) {
+  sd(x) / sqrt(length(x))
+}
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## Plotting
+
+```{r}
+plot(seeds$Height, seeds$Weight)
+plot(Weight ~ Height, data=seeds)
+
+```
+
+
+## Data Transformation
+```{r}
+seeds$Weight_log10 <- log10(seeds$Weight)
+seeds$Height_log10 <- log10(seeds$Height)
+
+```
+
+## Data Analysis
+We will run a linear regression on log-transformed variables to look for scaling coefficient.
+
+```{r}
+mod <- lm(Weight_log10 ~ Height_log10, data=seeds)
+summary(mod)
+mod$coef
+write.csv(mod$coef, "output/model_coefs.csv")
+```
+
+## Figure
+
+```{r}
+
+h <- sort(seeds$Height_log10)
+pred <- predict(mod, list(Height_log10=h), interval="confidence")
+
+pdf("figs/figure1.pdf")
+
+plot(Weight_log10 ~ Height_log10, data=seeds, col="grey", xlab="Height, log10", main="My big fig")
+
+lines(h, pred[,1], col="black", lty=2)
+
+polygon(c(h, rev(h)), c(pred[,2], rev(pred[,3])), col=rgb(0, 0, 1, 0.2), border=NA)
+
+dev.off()
+
+```
+
+## Conclusions
+
+The slope of the relationship between height and weight is `r round(mod$coef[2], 2)`.
