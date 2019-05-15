@@ -70,7 +70,7 @@ write.csv(mod$coef, "output/model_coefs.csv")
 h <- sort(seeds$Height_log10)
 pred <- predict(mod, list(Height_log10=h), interval="confidence")
 
-pdf("figs/figure1.pdf")
+png("figs/figure1.png")
 
 plot(Weight_log10 ~ Height_log10, data=seeds, col="grey", xlab="Height, log10", main="My big fig")
 
@@ -81,6 +81,10 @@ polygon(c(h, rev(h)), c(pred[,2], rev(pred[,3])), col=rgb(0, 0, 1, 0.2), border=
 dev.off()
 
 ```
+
+My final plot:
+
+![](figs/figure1.png)
 
 ## Conclusions
 
